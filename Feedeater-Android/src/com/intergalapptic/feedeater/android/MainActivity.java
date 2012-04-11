@@ -3,19 +3,8 @@
  */
 package com.intergalapptic.feedeater.android;
 
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
-
-import com.intergalapptic.feedeater.android.standards.Atom1;
-import com.intergalapptic.feedeater.android.standards.FeedStandard;
-import com.intergalapptic.feedeater.android.standards.Rss2;
-import com.intergalapptic.feedeater.android.xml.AbstractFeedElement;
-import com.intergalapptic.feedeater.android.xml.FeedElementContainer;
 
 /**
  * <p>MainActivity</p>
