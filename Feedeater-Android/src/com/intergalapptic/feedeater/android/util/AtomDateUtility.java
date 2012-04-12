@@ -18,6 +18,12 @@ W3C.NOTE-datetime-19980827  and  W3C.REC-xmlschema-2-20041028   (that  I  know  
 
 Copyright 2007, Chad Okere (ceothrow1 at gmail dotcom)
 OMG NO WARRENTY EXPRESSED OR IMPLIED!!!1
+
+--------------
+
+Modified by Evan W. Isnor, 2012.
+-Changed Class name to AtomDateUtility
+-Changed Method name to parse
  */
 package com.intergalapptic.feedeater.android.util;
 
@@ -26,7 +32,7 @@ import java.util.*;
 
 public class AtomDateUtility {
 
-	public static java.util.Date parseRFC3339Date(String datestring)
+	public static java.util.Date parse(String datestring)
 			throws java.text.ParseException, IndexOutOfBoundsException {
 		Date d = new Date();
 
