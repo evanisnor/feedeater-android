@@ -11,6 +11,8 @@ import org.xml.sax.Attributes;
 import android.util.Log;
 
 import com.intergalapptic.feedeater.android.Feedeater;
+import com.intergalapptic.feedeater.android.exception.UnsupportedElementException;
+import com.intergalapptic.feedeater.android.exception.UnsupportedNamespaceException;
 import com.intergalapptic.feedeater.android.standards.ElementType;
 import com.intergalapptic.feedeater.android.standards.FeedStandard;
 import com.intergalapptic.feedeater.android.standards.IFeedStandardType;
@@ -42,13 +44,14 @@ public class ElementFactory {
 		this.namespaceMap = new HashMap<String, FeedStandard>();
 	}
 	
-	public void setNamespace(String namespace, String elementName, Attributes attributes) {
+	public void setNamespace(String namespace, String elementName, Attributes attributes) throws UnsupportedNamespaceException {
 		if (!namespaceMap.containsKey(namespace)) {
 			FeedStandard std = FeedStandard.findStandard(namespace, elementName, attributes);
-			if (std != null) {
-				Log.i(Feedeater.TAG, "Mapping " + std.name() + " to namespace " + namespace);
-				namespaceMap.put(namespace, std);
+			if (std == null) {
+				throw new UnsupportedNamespaceException(namespace);
 			}
+			Log.i(Feedeater.TAG, "Mapping " + std.name() + " to namespace " + namespace);
+			namespaceMap.put(namespace, std);
 		}
 	}
 	
@@ -56,16 +59,19 @@ public class ElementFactory {
 		namespaceMap.clear();
 	}
 	
-	public AbstractFeedElement getElement(String namespace, String elementName) {
+	public AbstractFeedElement getElement(String namespace, String elementName) throws UnsupportedElementException, UnsupportedNamespaceException {
 		FeedStandard expectedStandard = namespaceMap.get(namespace);
-		if (expectedStandard != null) {
-			IFeedStandardType<?> type = parseType(elementName, expectedStandard);
-			if (type != null) {
-				AbstractFeedElement element = getElementInstance(type);
-				return element;
-			}
+		if (expectedStandard == null) {
+			throw new UnsupportedElementException(elementName, namespace);
 		}
-		return null;
+		else {
+			IFeedStandardType<?> type = parseType(elementName, expectedStandard);
+			if (type == null) {
+				throw new UnsupportedNamespaceException(namespace);
+			}
+			AbstractFeedElement element = getElementInstance(type);
+			return element;
+		}
 	}
 	
 	private IFeedStandardType<?> parseType(String elementName, FeedStandard std) {

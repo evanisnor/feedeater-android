@@ -19,6 +19,8 @@ import org.xml.sax.helpers.DefaultHandler;
 import android.util.Log;
 
 import com.intergalapptic.feedeater.android.Feedeater;
+import com.intergalapptic.feedeater.android.exception.UnsupportedElementException;
+import com.intergalapptic.feedeater.android.exception.UnsupportedNamespaceException;
 import com.intergalapptic.feedeater.android.xml.AbstractFeedElement;
 import com.intergalapptic.feedeater.android.xml.FeedElement;
 import com.intergalapptic.feedeater.android.xml.FeedElementAttribute;
@@ -42,6 +44,9 @@ public class FeedHandler extends DefaultHandler {
 	private List<FeedElementContainer> documentBreadtrail;
 	private AbstractFeedElement currentElement;
 	private StringBuffer elementText;
+	
+	private List<String> unsupportedNamespaceList;
+	private List<String> unsupportedElementList;
 
 	/**
 	 * 
@@ -62,6 +67,8 @@ public class FeedHandler extends DefaultHandler {
 	 */
 	private FeedHandler() {
 		elementFactory = ElementFactory.getInstance();
+		unsupportedNamespaceList = new LinkedList<String>();
+		unsupportedElementList = new LinkedList<String>();
 		initializeSax();
 	}
 	
@@ -114,6 +121,8 @@ public class FeedHandler extends DefaultHandler {
 	@Override
 	public void endDocument() throws SAXException {
 		documentBreadtrail.clear();
+		unsupportedNamespaceList.clear();
+		unsupportedElementList.clear();
 		elementFactory.clearNamespaces();
 	}
 	
@@ -123,20 +132,16 @@ public class FeedHandler extends DefaultHandler {
 	@Override
 	public void startElement(String namespace, String elementName, String qName, Attributes attributes)
 			throws SAXException {
-		elementFactory.setNamespace(namespace, elementName, attributes);
-		AbstractFeedElement parsedElement = elementFactory.getElement(namespace, elementName);
-		
-		if (parsedElement == null) {
-			Log.d(Feedeater.TAG, "Unsupported Element: " + elementName);
-		}
-		else {
+		try {
+			elementFactory.setNamespace(namespace, elementName, attributes);
+			AbstractFeedElement parsedElement = elementFactory.getElement(namespace, elementName);
 			for (int attributeIndex = 0; attributeIndex < attributes.getLength(); attributeIndex++) {
 				FeedElementAttribute attribute = new FeedElementAttribute(
 						attributes.getLocalName(attributeIndex),
 						attributes.getValue(attributeIndex));
 				parsedElement.addAttribute(attribute);
 			}
-	
+			
 			if (depth == 0) {
 				//Keep the depth 0 reference as the root object.
 				rootElement = parsedElement;
@@ -156,6 +161,20 @@ public class FeedHandler extends DefaultHandler {
 				currentElement = parsedElement;
 			}
 		}
+		catch (UnsupportedElementException uee) {
+			if (!unsupportedElementList.contains(elementName)) {
+				Log.d(Feedeater.TAG, "Can't read unsupported element \'" + elementName + "\' from namespace \'" + namespace + "\'");
+				unsupportedElementList.add(elementName);
+			}
+			currentElement = null;
+		}
+		catch (UnsupportedNamespaceException une) {
+			if (!unsupportedNamespaceList.contains(namespace)) {
+				Log.d(Feedeater.TAG, "Can't read unsupported namespace \'" + namespace + "\'");
+				unsupportedNamespaceList.add(namespace);
+			}
+			currentElement = null;
+		}
 	}
 	
 	/* (non-Javadoc)
@@ -164,8 +183,8 @@ public class FeedHandler extends DefaultHandler {
 	@Override
 	public void endElement(String namespace, String elementName, String qName)
 			throws SAXException {
-		AbstractFeedElement parsedElement = elementFactory.getElement(namespace, elementName);
-		if (parsedElement != null) {
+		try {
+			AbstractFeedElement parsedElement = elementFactory.getElement(namespace, elementName);
 			if (parsedElement instanceof FeedElementContainer) {
 				depth--;
 			}
@@ -176,6 +195,12 @@ public class FeedHandler extends DefaultHandler {
 					elementText = null;
 				}
 			}
+		}
+		catch (UnsupportedElementException uee) {
+			elementText = null;
+		}
+		catch (UnsupportedNamespaceException une) {
+			elementText = null;
 		}
 	}
 	
