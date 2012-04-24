@@ -35,7 +35,6 @@ import com.intergalapptic.feedeater.android.xml.FeedElementContainer;
  * @date	Mar 31, 2012
  */
 public class FeedHandler extends DefaultHandler {
-	private static FeedHandler instance = null;
 	private static ElementFactory elementFactory;
 	
 	private XMLReader xmlReader;
@@ -55,10 +54,7 @@ public class FeedHandler extends DefaultHandler {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends AbstractFeedElement> T parse(InputStream inputStream) {
-		if (instance == null) {
-			instance = new FeedHandler();
-		}
-		return (T) instance.parseStream(inputStream);
+		return (T) new FeedHandler().parseStream(inputStream);
 	}
 	
 	/**
